@@ -30,6 +30,7 @@ async function run() {
 
     const usersCollection = client.db('musicSchool').collection('users')
     const classesCollection = client.db('musicSchool').collection('classes')
+    const selectedCollection = client.db('musicSchool').collection('selected')
 
     app.get('/users', async(req , res)=>{
         const result =await usersCollection.find().toArray()
@@ -48,10 +49,23 @@ async function run() {
         const result = await usersCollection.insertOne(user)
         res.send(result)
        })
+
+
+       app.put('/users/:email',async(req,res)=>{
+        const email = req.params.email;
+        const user = req.body;
+        const query = {email: email};
+        const options = {upsert: true};
+        const updateDoc = {
+            $set: user
+        }
+        const result = await usersCollection.updateOne(query,updateDoc,options)
+        res.send(result)
+    })
     
     app.get('/classes', async(req,res)=>{
         const result =await classesCollection.find().toArray()
-      //  res.send(result)
+       res.send(result)
     })
     app.get('/classes/popular', async (req, res) =>{
         const result = await classesCollection .find({ category: 'popular' }).sort({ number_of_students: -1 }).limit(6).toArray();
@@ -60,6 +74,35 @@ async function run() {
     app.get('/classes/student', async (req, res) =>{
         const result = await classesCollection .find().sort({ number_of_students: -1 }).limit(6).toArray();
         res.send(result)
+    })
+   
+  
+    app.get('/selected',async(req,res)=>{
+      const email = req.query.email;
+      if(!email){
+        return res.send([])
+      }
+      const query = {"student.email": email}
+      const result = await selectedCollection.find(query).toArray()
+      res.send(result)
+    })
+ 
+    // app.get('/selected/student', async(req,res)=>{
+    //   const email = req.params.email;
+    //   if(!email){
+    //    return res.json([])
+    //   }
+    //   const query = {student: email}
+    //   const result = await bookingsCollection.find(query).toArray()
+    //   console.log(result)
+    //   res.send(result)
+    // })
+
+
+    app.post('/selected',async(req,res)=>{
+      const select = req.body;
+      const result = await selectedCollection.insertOne(select)
+      res.send(result)
     })
 
 
