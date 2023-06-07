@@ -51,7 +51,7 @@ async function run() {
     
     app.get('/classes', async(req,res)=>{
         const result =await classesCollection.find().toArray()
-       res.send(result)
+      //  res.send(result)
     })
     app.get('/classes/popular', async (req, res) =>{
         const result = await classesCollection .find({ category: 'popular' }).sort({ number_of_students: -1 }).limit(6).toArray();
