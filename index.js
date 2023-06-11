@@ -58,25 +58,25 @@ async function run() {
      res.send(token)
     })
 
-    // const verifyAdmin =async(req,res,next)=>{
-    //   const email = req.decoded.email 
-    //   const query = {email : email}
-    //   const user = await usersCollection.findOne(query)
-    //      if(user?.role !== 'admin'){
-    //    return res.status(403).send({error: true, message: "forbidden"})
-    //      }
-    //      next()
-    // }
+    const verifyAdmin =async(req,res,next)=>{
+      const email = req.decoded.email 
+      const query = {email : email}
+      const user = await usersCollection.findOne(query)
+         if(user?.role !== 'admin'){
+       return res.status(403).send({error: true, message: "forbidden"})
+         }
+         next()
+    }
 
-    // const verifyInstructor =async(req,res,next)=>{
-    //   const email = req.decoded.email 
-    //   const query = {email : email}
-    //   const user = await usersCollection.findOne(query)
-    //      if(user?.role !== 'instructor'){
-    //    return res.status(403).send({error: true, message: "forbidden"})
-    //      }
-    //      next()
-    // }
+    const verifyInstructor =async(req,res,next)=>{
+      const email = req.decoded.email 
+      const query = {email : email}
+      const user = await usersCollection.findOne(query)
+         if(user?.role !== 'instructor'){
+       return res.status(403).send({error: true, message: "forbidden"})
+         }
+         next()
+    }
 
     app.get('/users', async(req , res)=>{
         const result =await usersCollection.find().toArray()
@@ -84,7 +84,7 @@ async function run() {
      })
  
       // verify admin 
-      app.get('/users/admin/:email',verifyJWT, async(req,res)=>{
+      app.get('/users/admin/:email',verifyJWT,verifyAdmin ,async(req,res)=>{
         const email = req.params.email
         if(req.decoded.email !== email){
           return res.send({admin: false})
@@ -95,7 +95,7 @@ async function run() {
         res.send(result)
       }) 
       // verify instructor 
-      app.get('/users/instructor/:email',verifyJWT, async(req,res)=>{
+      app.get('/users/instructor/:email',verifyJWT,verifyInstructor, async(req,res)=>{
         const email = req.params.email
         if(req.decoded.email !== email){
           return res.send({instructor: false})
@@ -119,7 +119,8 @@ async function run() {
         res.send(result)
        })
 
-       app.patch('/users/admin/:id', async(req,res)=>{
+
+       app.patch('/users/admin/:id',verifyJWT,verifyAdmin, async(req,res)=>{
         const id = req.params.id;
         const filter = {_id: new ObjectId(id)}
         const updatedDoc = {
@@ -159,6 +160,23 @@ async function run() {
         const result =await classesCollection.find().toArray()
        res.send(result)
     })
+   
+    app.get('/instructors', async (req, res) => {
+      const result = await classesCollection.aggregate([
+        { $group: { _id: "$instructor_email", doc: { $first: "$$ROOT" } } },
+        { $project: { _id: 0, email: "$_id", doc: 1 } }
+      ]).toArray();
+      
+      res.send(result.map(({ doc }) => doc));
+    });
+
+    //   // all classes page api 
+    // app.get('/anis/:email', async(req,res)=>{
+    //   const email = req.params.email
+    //   const query = {email:email}
+    //     const result =await classesCollection.findOne(query).toArray()
+    //    res.send(result)
+    // })
 
     // instructors class postted
     app.get('/classes/instructor/:email', async(req,res)=>{
@@ -196,8 +214,6 @@ async function run() {
       res.send(result)
       })
    
-   
-   
 
     // home page api 
     app.get('/classes/popular', async (req, res) =>{
@@ -228,7 +244,7 @@ app.post('/feedback', async (req, res) => {
   if (!classData) {
     return res.status(404).json({ error: 'Class not found' });
   }
-  if (classData.status === 'pending' ) {
+  if (classData.status === 'pending' || classData.status === 'approve') {
     return res.status(400).json({ error: 'Feedback not allowed for this class' });
   }
   const updatedClassData = {
@@ -319,7 +335,6 @@ app.post('/feedback', async (req, res) => {
     // payment info api  student
     app.post('/payments', async(req,res)=>{
       const payment = req.body;
-      const mewId = req.params.id
       const result = await paymentCollection.insertOne(payment)
       
       const query = {_id:  {$in: payment.payment_class_Id.map(id => new ObjectId(id))}}
@@ -328,6 +343,13 @@ app.post('/feedback', async (req, res) => {
     })
  
     // get payment classes by email in student
+    app.get('/payments/:email', async(req,res)=>{
+      const email = req.params.email;
+      const query = {email: email}
+      const result = await paymentCollection.find(query).sort({ date: -1 }).toArray()
+      res.send(result)
+      
+    })
         
      // classes upadate student
     app.patch('/classes/:id', verifyJWT,async(req,res)=>{
