@@ -106,7 +106,7 @@ async function run() {
         res.send(result)
       }) 
 
-
+    //  post user data in database , one user data save one time, first create account   
      app.post('/users', async(req,res)=>{
         const user = req.body;
         console.log(user)
@@ -120,7 +120,7 @@ async function run() {
        })
 
 
-       app.patch('/users/admin/:id',verifyJWT,verifyAdmin, async(req,res)=>{
+       app.patch('/users/admin/:id', async(req,res)=>{
         const id = req.params.id;
         const filter = {_id: new ObjectId(id)}
         const updatedDoc = {
@@ -139,8 +139,7 @@ async function run() {
         const result =  await usersCollection.updateOne(filter,updatedDoc)
         res.send(result)
         })
-     
-   
+
        app.put('/users/:email',async(req,res)=>{
         const email = req.params.email;
         const user = req.body;
@@ -161,6 +160,8 @@ async function run() {
        res.send(result)
     })
    
+
+    // instructors page api 
     app.get('/instructors', async (req, res) => {
       const result = await classesCollection.aggregate([
         { $group: { _id: "$instructor_email", doc: { $first: "$$ROOT" } } },
@@ -170,15 +171,7 @@ async function run() {
       res.send(result.map(({ doc }) => doc));
     });
 
-    //   // all classes page api 
-    // app.get('/anis/:email', async(req,res)=>{
-    //   const email = req.params.email
-    //   const query = {email:email}
-    //     const result =await classesCollection.findOne(query).toArray()
-    //    res.send(result)
-    // })
-
-    // instructors class postted
+    // instructors class posted only see instructor 
     app.get('/classes/instructor/:email', async(req,res)=>{
       const email = req.params.email;
       const query = {instructor_email: email}
@@ -187,7 +180,7 @@ async function run() {
     })
 
     // admin only show all classe added by instructor get by role
-    app.get('/classes/role', async(req,res)=>{
+    app.get('/classes/role', ,async(req,res)=>{
       const result  = await classesCollection.find({role: 'instructor'}).toArray()
       res.send(result)
     })
@@ -271,20 +264,21 @@ app.post('/feedback', async (req, res) => {
       res.send(result)
     })
 
+
     app.post('/selected',async(req,res)=>{
       const select = req.body;
       const result = await selectedCollection.insertOne(select)
       res.send(result)
     })
 
-    app.delete('/selected/:id', async (req, res) => {
+    app.delete('/selected/:id',verifyJWT ,async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedCollection.deleteOne(query);
       res.json({ deletedCount: result.deletedCount });
     });
 
-    app.get('/select/classes/:id', async (req, res) => {
+    app.get('/select/classes/:id',verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedCollection.findOne(query);
@@ -333,7 +327,7 @@ app.post('/feedback', async (req, res) => {
 
 
     // payment info api  student
-    app.post('/payments', async(req,res)=>{
+    app.post('/payments',verifyJWT, async(req,res)=>{
       const payment = req.body;
       const result = await paymentCollection.insertOne(payment)
       
@@ -343,7 +337,7 @@ app.post('/feedback', async (req, res) => {
     })
  
     // get payment classes by email in student
-    app.get('/payments/:email', async(req,res)=>{
+    app.get('/payments/:email',verifyJWT, async(req,res)=>{
       const email = req.params.email;
       const query = {email: email}
       const result = await paymentCollection.find(query).sort({ date: -1 }).toArray()
