@@ -210,7 +210,7 @@ async function run() {
       const result = await classesCollection.find({status:'approve'}).sort({ number_of_students: -1 }).limit(6).toArray();
       res.send(result)
     })
-
+    
     // home page api 
     app.get('/classes/student', async (req, res) => {
       const result = await classesCollection.aggregate([
@@ -230,7 +230,7 @@ async function run() {
     })
 
 
-    // 
+    // admin feedback classes 
 
     app.post('/feedback', async (req, res) => {
       const feedback = req.body;
@@ -286,7 +286,7 @@ async function run() {
       const result = await selectedCollection.findOne(query);
       res.json(result);
     });
-    // payment process api for checkout page
+    // 
     app.post('/create-payment-intent', verifyJWT, async (req, res) => {
       const { price } = req.body;
       const amount = Math.ceil(price * 100); // Convert price to cents and round up
