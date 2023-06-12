@@ -255,9 +255,7 @@ async function run() {
       const email = req.query.email;
       if (!email) {
         return res.send([])
-      }
-      // const decodedEmail = req.decoded.email;
-      // if(email !== decodedEmail){
+    
       //   return res.status(401).send({error: true, message: 'forbidden access'})
       // }
       const query = { "student.email": email }
