@@ -318,7 +318,7 @@ async function run() {
       res.send({ result, deleteResult })
     })
 
-    // get payment classes by email in student
+    //
     app.get('/payments/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       const query = { email: email }
