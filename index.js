@@ -260,7 +260,7 @@ async function run() {
 
 // =========
 
-    app.get('/selected',verifyJWT, async (req, res) => {
+    app.get('/selected', async (req, res) => {
       const email = req.query.email;
       if (!email) {
         return res.send([])
