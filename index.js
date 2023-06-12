@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express()
 const cors = require('cors')
-const morgan = require('morgan')
+// const morgan = require('morgan')
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
 const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY)
@@ -10,10 +10,11 @@ const port = process.env.PORT || 5000
 
 app.use(cors())
 app.use(express.json())
-app.use(morgan('dev'))
+// app.use(morgan('dev'))
 
 const verifyJWT = (req, res, next) => {
   const authorization = req.headers.authorization;
+  console.log(authorization)
   if (!authorization) {
     return res.status(401).send({ error: true, message: 'unauthorized access' })
   }
@@ -43,7 +44,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const usersCollection = client.db('musicSchool').collection('users')
     const classesCollection = client.db('musicSchool').collection('classes')
@@ -71,7 +72,9 @@ async function run() {
     const verifyInstructor = async (req, res, next) => {
       const email = req.decoded.email
       const query = { email: email }
+      // console.log(email)
       const user = await usersCollection.findOne(query)
+      // console.log(user)
       if (user?.role !== 'instructor') {
         return res.status(403).send({ error: true, message: "forbidden" })
       }
@@ -95,7 +98,7 @@ async function run() {
       res.send(result)
     })
     // verify instructor 
-    app.get('/users/instructor/:email', verifyJWT, verifyInstructor, async (req, res) => {
+    app.get('/users/instructor/:email', verifyJWT, verifyInstructor,async (req, res) => {
       const email = req.params.email
       if (req.decoded.email !== email) {
         return res.send({ instructor: false })
@@ -109,7 +112,7 @@ async function run() {
     //  post user data in database , one user data save one time, first create account   
     app.post('/users', async (req, res) => {
       const user = req.body;
-      console.log(user)
+      // console.log(user)
       const query = { email: user.email }
       const existingUser = await usersCollection.findOne(query)
       if (existingUser) {
@@ -260,8 +263,9 @@ async function run() {
 
 // =========
 
-    app.get('/selected', async (req, res) => {
+    app.get('/selected',async (req, res) => {
       const email = req.query.email;
+      // console.log(email)
       if (!email) {
         return res.send([])
       }
@@ -275,27 +279,27 @@ async function run() {
     })
 
 // =========
-    app.post('/selected',verifyJWT, async (req, res) => {
+    app.post('/selected', async (req, res) => {
       const select = req.body;
       const result = await selectedCollection.insertOne(select)
       res.send(result)
     })
 
-    app.delete('/selected/:id', verifyJWT, async (req, res) => {
+    app.delete('/selected/:id',  async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedCollection.deleteOne(query);
       res.json({ deletedCount: result.deletedCount });
     });
 
-    app.get('/select/classes/:id', verifyJWT, async (req, res) => {
+    app.get('/select/classes/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedCollection.findOne(query);
       res.json(result);
     });
     // payment process api for checkout page
-    app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+    app.post('/create-payment-intent',  async (req, res) => {
       const { price } = req.body;
       const amount = Math.ceil(price * 100); // Convert price to cents and round up
       if (amount < 1) {
@@ -312,13 +316,13 @@ async function run() {
           clientSecret: paymentIntent.client_secret
         });
       } catch (error) {
-        console.error(error);
+        // console.error(error);
         res.status(500).send({ error: true, message: 'An error occurred while creating payment intent' });
       }
     });
 
     // payment info api  student
-    app.post('/payments', verifyJWT, async (req, res) => {
+    app.post('/payments', async (req, res) => {
       const payment = req.body;
       const result = await paymentCollection.insertOne(payment)
 
@@ -328,7 +332,7 @@ async function run() {
     })
 
     //
-    app.get('/payments/:email', verifyJWT, async (req, res) => {
+    app.get('/payments/:email',  async (req, res) => {
       const email = req.params.email;
       const query = { email: email }
       const result = await paymentCollection.find(query).sort({ date: -1 }).toArray()
@@ -337,9 +341,9 @@ async function run() {
     })
 
     // classes update student
-    app.patch('/classes/:id', verifyJWT, async (req, res) => {
+    app.patch('/classes/:id', async (req, res) => {
       const classes = req.body;
-      console.log(classes)
+      // console.log(classes)
       if (classes.available_seats < 0) {
         return res.status(400).send({ error: true, message: 'Invalid amount' });
       }
