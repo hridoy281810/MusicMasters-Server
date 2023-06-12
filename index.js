@@ -286,7 +286,7 @@ async function run() {
       const result = await selectedCollection.findOne(query);
       res.json(result);
     });
-    // 
+    // payment process api for checkout page
     app.post('/create-payment-intent', verifyJWT, async (req, res) => {
       const { price } = req.body;
       const amount = Math.ceil(price * 100); // Convert price to cents and round up
@@ -309,7 +309,7 @@ async function run() {
       }
     });
 
-    // payment info api  student
+    // 
     app.post('/payments', verifyJWT, async (req, res) => {
       const payment = req.body;
       const result = await paymentCollection.insertOne(payment)
