@@ -210,7 +210,6 @@ async function run() {
       const result = await classesCollection.find({status:'approve'}).sort({ number_of_students: -1 }).limit(6).toArray();
       res.send(result)
     })
-    
     // home page api 
     app.get('/classes/student', async (req, res) => {
       const result = await classesCollection.aggregate([
@@ -309,7 +308,7 @@ async function run() {
       }
     });
 
-    // 
+    // payment info api  student
     app.post('/payments', verifyJWT, async (req, res) => {
       const payment = req.body;
       const result = await paymentCollection.insertOne(payment)
