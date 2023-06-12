@@ -204,22 +204,31 @@ async function run() {
       res.send(result)
     })
 
-
+    // /classes/student
     // home page api 
-    app.get('/classes/popular', async (req, res) => {
+    app.get('/classes/student', async (req, res) => {
       const result = await classesCollection.find({status:'approve'}).sort({ number_of_students: -1 }).limit(6).toArray();
       res.send(result)
     })
+
+    // app.get('/classes/popular', async (req, res) => {
+    //   const {email} = req.body
+      
+    //   const result = await classesCollection.find({status:'approve',instructor_email: { $ne: email } }).sort({ number_of_students: -1 }).limit(6).toArray();
+    //   res.send(result)
+    // })
     // home page api 
-    app.get('/classes/student', async (req, res) => {
+    app.get('/classes/popular', async (req, res) => {
       const result = await classesCollection.aggregate([
-        { $group: { _id: "$instructor_email", doc: { $first: "$$ROOT" } } },
-        { $project: { _id: 0, email: "$_id", doc: 1 } }
-      ]).sort({ number_of_students: -1 }).limit(6).toArray();
+        { $group: { _id: '$instructor_email', doc: { $first: '$$ROOT' } } },
+        { $sort: { 'doc.number_of_students': -1 } },
+        { $limit: 6 },
+        { $sort: { 'doc.number_of_students': -1 } }
+      ]).toArray();
 
       res.send(result.map(({ doc }) => doc));
     });
-
+    // .sort({ number_of_students: -1 }).limit(6).
     // instructor add class api 
     app.post('/classes', async (req, res) => {
       const singleClass = req.body;
@@ -255,7 +264,9 @@ async function run() {
       const email = req.query.email;
       if (!email) {
         return res.send([])
-    
+      }
+      // const decodedEmail = req.decoded.email;
+      // if(email !== decodedEmail){
       //   return res.status(401).send({error: true, message: 'forbidden access'})
       // }
       const query = { "student.email": email }
